@@ -1,3 +1,4 @@
+import threading
 import ollama
 import psutil
 import multiprocessing as mp
@@ -109,33 +110,43 @@ def run_cycle(workers, batch_size=512):
 # ==============================
 # MAIN
 # ==============================
+# ==============================
+# MAIN
+# ==============================
 if __name__ == "__main__":
     print("="*60)
     print("  NeurOptix — Pipeline IA + Analyse par Phi3")
     print("="*60)
-
     historique = []
+    resultat_ia = [None]
+
+    def lancer_analyse_ia(data):
+        """Tourne en arrière-plan pendant les cycles"""
+        resultat_ia[0] = analyser_avec_ia(data)
 
     # Lance 3 cycles
     for cycle in range(1, 4):
         cpu = psutil.cpu_percent(interval=0.5)
         workers = 4 if cpu < 75 else 2
-
         print(f"\n--- CYCLE {cycle}/3 ---")
         print(f"  CPU : {cpu:.1f}% · workers : {workers}")
-
         perf = run_cycle(workers)
         historique.append(perf)
-
         print(f"  Temps : {perf['temps']}s · Score : {perf['score']:.2f}")
+
+        # Lance l'IA en arrière-plan après le 1er cycle
+        if cycle == 1:
+            t = threading.Thread(target=lancer_analyse_ia, args=(historique,))
+            t.daemon = True
+            t.start()
+
         time.sleep(1)
 
-    # Analyse IA locale
+    # Récupère le résultat IA (attend max 5s)
     print("\n" + "="*60)
     print("  ANALYSE PAR L'IA LOCALE (Phi3:mini)")
     print("="*60)
-    conseil = analyser_avec_ia(historique)
+    t.join(timeout=15)
+    conseil = resultat_ia[0] or "⚠️ IA trop lente — aucun conseil disponible"
     print(f"  {conseil}")
-    print("="*60)    
-    
-    
+    print("="*60)
