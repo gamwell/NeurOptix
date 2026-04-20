@@ -7,31 +7,56 @@ import sys
 # LIBÉRER LA RAM
 # ==============================
 def liberer_ram():
-    """Tue les processus inutiles en respectant la liste blanche"""
+    """
+    3 niveaux :
+    1. Tue la liste noire en priorité
+    2. Si RAM > seuil → tue tout sauf proteges
+    3. Jamais toucher aux proteges
+    """
     import json, os
-    # Charge la liste de protection
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config_protection.json')
     try:
         with open(config_path) as f:
-            proteges = set(json.load(f)["proteges"])
+            config = json.load(f)
+            proteges  = set(config.get("proteges", []))
+            a_tuer    = set(config.get("a_tuer", []))
+            seuil_ram = config.get("seuil_ram", 70)
     except:
-        proteges = {"python.exe", "powershell.exe", "explorer.exe"}
+        proteges  = {"python.exe", "powershell.exe", "explorer.exe"}
+        a_tuer    = set()
+        seuil_ram = 70
 
     avant = psutil.virtual_memory().percent
-    tues = []
+    tues  = []
+
+    # ÉTAPE 1 — Tue la liste noire
     for proc in psutil.process_iter(['name', 'memory_percent']):
         try:
             nom = proc.info['name'].lower()
-            mem = proc.info['memory_percent']
-            if mem > 1.0 and nom not in proteges:
+            if nom in a_tuer:
                 proc.kill()
-                tues.append(f"{nom} ({mem:.1f}%)")
+                tues.append(f"{nom}🔴")
         except:
             pass
-    apres = psutil.virtual_memory().percent
+
+    # ÉTAPE 2 — Si RAM encore > seuil, tue tout sauf proteges
+    ram_apres_etape1 = psutil.virtual_memory().percent
+    if ram_apres_etape1 > seuil_ram:
+        for proc in psutil.process_iter(['name', 'memory_percent']):
+            try:
+                nom = proc.info['name'].lower()
+                mem = proc.info['memory_percent']
+                if nom not in proteges and mem > 0.5:
+                    proc.kill()
+                    tues.append(f"{nom}🟡")
+            except:
+                pass
+
+    apres  = psutil.virtual_memory().percent
     liberee = round(avant - apres, 1)
-    detail = ", ".join(tues[:3]) or "rien à tuer"
-    return f"RAM : {avant}% → {apres}% | Tués : {detail}"
+    detail  = ", ".join(tues[:5]) or "rien à tuer"
+    mode    = "MODE URGENCE" if ram_apres_etape1 > seuil_ram else "mode normal"
+    return f"RAM : {avant}% → {apres}% ({mode}) | Tués : {detail}"
 
 # ==============================
 # TEMPÉRATURE CPU

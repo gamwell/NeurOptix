@@ -9,7 +9,14 @@
     "powershell.exe",
     "explorer.exe",
     "svchost.exe",
-    "msys2.exe",
-	"antigravity.exe"
-  ]
+    "msys2.exe"
+  ],
+  "a_tuer": [
+    "solitaire.exe",
+    "spotify.exe",
+    "NortonBrowserInstaller.exe",
+    "xboxpcapp.exe",
+    "googleearth.exe"
+  ],
+  "seuil_ram": 60
 }
