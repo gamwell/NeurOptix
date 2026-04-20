@@ -90,8 +90,6 @@ def run_cycle(workers, batch_size=512):
     }
 
 # ==============================
-# MAIN
-# ==============================
 # ==============================
 # MAIN
 # ==============================
@@ -100,11 +98,6 @@ if __name__ == "__main__":
     print("  NeurOptix — Pipeline IA + Analyse par Phi3")
     print("="*60)
     historique = []
-    resultat_ia = [None]
-
-    def lancer_analyse_ia(data):
-        """Tourne en arrière-plan pendant les cycles"""
-        resultat_ia[0] = analyser_avec_ia(data)
 
     # Lance 3 cycles
     for cycle in range(1, 4):
@@ -115,20 +108,6 @@ if __name__ == "__main__":
         perf = run_cycle(workers)
         historique.append(perf)
         print(f"  Temps : {perf['temps']}s · Score : {perf['score']:.2f}")
-
-        # Lance l'IA en arrière-plan après le 1er cycle
-        if cycle == 1:
-            t = threading.Thread(target=lancer_analyse_ia, args=(historique,))
-            t.daemon = True
-            t.start()
-
         time.sleep(1)
 
-    # Récupère le résultat IA (attend max 5s)
-    print("\n" + "="*60)
-    print("  ANALYSE PAR L'IA LOCALE (Phi3:mini)")
-    print("="*60)
-    t.join(timeout=40)
-    conseil = resultat_ia[0] or "⚠️ IA trop lente — aucun conseil disponible"
-    print(f"  {conseil}")
-    print("="*60)
+    print("\n✅ Cycles terminés — lance l'analyse IA depuis la GUI")
