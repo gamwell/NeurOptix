@@ -54,10 +54,62 @@ def boost_cpu():
     return "✅ Mode haute performance activé"
 
 # ==============================
+# BOOST CALCUL CPU
+# ==============================
+def boost_calcul_cpu():
+    """Augmente la priorité CPU + optimise le cache"""
+    resultats = []
+
+    # 1. Priorité haute pour le processus Python actuel
+    import os
+    p = psutil.Process(os.getpid())
+    p.nice(psutil.HIGH_PRIORITY_CLASS)
+    resultats.append("✅ Priorité CPU : HAUTE")
+
+    # 2. Active tous les cœurs logiques
+    subprocess.run([
+        "powershell", "-Command",
+        "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100"
+    ], capture_output=True)
+    resultats.append("✅ Cœurs CPU : 100% min")
+
+    # 3. Désactive le throttling thermique temporairement
+    subprocess.run([
+        "powershell", "-Command",
+        "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100"
+    ], capture_output=True)
+    resultats.append("✅ Throttling désactivé")
+
+    # 4. Vide le cache de travail pour libérer de la bande passante mémoire
+    ctypes.windll.psapi.EmptyWorkingSet(-1)
+    resultats.append("✅ Cache mémoire optimisé")
+
+    return "\n".join(resultats)
+
+# ==============================
+# ANTI-SURCHAUFFE
+# ==============================
+def anti_surchauffe(seuil=75):
+    """Réduit la charge CPU si température trop haute"""
+    temp = temperature_cpu()
+    if temp is None:
+        return "⚠️ Température non disponible"
+
+    if temp >= seuil:
+        # Réduit la fréquence CPU à 80%
+        subprocess.run([
+            "powershell", "-Command",
+            "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 80"
+        ], capture_output=True)
+        return f"🌡️ {temp}°C ≥ {seuil}°C → fréquence réduite à 80%"
+    else:
+        return f"🌡️ {temp}°C — température normale, pas d'action"
+
+# ==============================
 # TEST
 # ==============================
 if __name__ == "__main__":
     print(liberer_ram())
-    temp = temperature_cpu()
-    print(f"Température CPU : {temp}°C" if temp else "Température : non disponible")
     print(boost_cpu())
+    print(boost_calcul_cpu())
+    print(anti_surchauffe())
