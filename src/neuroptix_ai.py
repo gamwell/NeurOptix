@@ -54,25 +54,7 @@ def analyser_avec_ia(historique):
     """Envoie les résultats du pipeline à Phi3 pour analyse"""
 
     # Prépare le contexte pour l'IA
-    contexte = f"""
-Tu es un assistant spécialisé en optimisation de pipeline IA.
-Voici les résultats des derniers cycles du pipeline NeurOptix :
-
-CPU actuel     : {psutil.cpu_percent(interval=0.5):.1f}%
-RAM utilisée   : {psutil.virtual_memory().percent:.1f}%
-Cœurs CPU      : 6 (Intel i5-9500)
-
-Historique des cycles :
-"""
-    for i, h in enumerate(historique):
-        contexte += f"  Cycle {i+1} : workers={h['workers']} · temps={h['temps']}s · score={h['score']:.2f}\n"
-
-    contexte += """
-En 2-3 phrases courtes et directes :
-1. Analyse les performances
-2. Donne UNE recommandation concrète
-3. Dis si le système est bien optimisé
-"""
+    contexte = "CPU:" + str(int(psutil.cpu_percent(interval=0.5))) + "% RAM:" + str(int(psutil.virtual_memory().percent)) + "% | " + " | ".join(["t=" + str(h['temps']) + "s s=" + str(int(h['score'])) for h in historique]) + "\nReponds en francais en 1 phrase courte: systeme optimise? que faire?"
 
     print("\n  Analyse IA en cours...", end=" ", flush=True)
     try:
@@ -146,7 +128,7 @@ if __name__ == "__main__":
     print("\n" + "="*60)
     print("  ANALYSE PAR L'IA LOCALE (Phi3:mini)")
     print("="*60)
-    t.join(timeout=15)
+    t.join(timeout=40)
     conseil = resultat_ia[0] or "⚠️ IA trop lente — aucun conseil disponible"
     print(f"  {conseil}")
     print("="*60)
