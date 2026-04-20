@@ -14,7 +14,7 @@ class OptiCPUApp:
     def __init__(self, root):
         self.root      = root
         self.root.title("NeurOptix")
-        self.root.geometry("480x820")
+        self.root.geometry("480x900")
         self.root.resizable(False, False)
         self.root.configure(bg="#0d0f14")
         self.agent       = None
