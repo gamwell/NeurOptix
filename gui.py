@@ -72,6 +72,27 @@ class OptiCPUApp:
         self.ram_lbl = tk.Label(f_ram, text="0.0%", bg=SURF, fg=TXT,
                                  font=("Courier New", 10), width=6)
         self.ram_lbl.pack(side="left")
+        # OPTIMISATION
+        frame_opt = tk.Frame(self.root, bg=SURF,
+                             highlightbackground=BDR, highlightthickness=1)
+        frame_opt.pack(fill="x", padx=20, pady=4)
+        tk.Label(frame_opt, text="OPTIMISATION",
+                 bg=SURF, fg=MUT,
+                 font=("Courier New", 8, "bold")).pack(anchor="w", padx=12, pady=(10,4))
+        f_btns = tk.Frame(frame_opt, bg=SURF)
+        f_btns.pack(fill="x", padx=12, pady=(0,10))
+        self.btn_ram = tk.Button(f_btns, text="🧹 RAM",
+                 bg="#1e293b", fg=TXT, font=("Courier New", 10, "bold"),
+                 relief="flat", cursor="hand2", command=self._liberer_ram)
+        self.btn_ram.pack(side="left", padx=4, pady=2, ipadx=8, ipady=4)
+        self.btn_boost = tk.Button(f_btns, text="⚡ Boost",
+                 bg="#1e293b", fg=TXT, font=("Courier New", 10, "bold"),
+                 relief="flat", cursor="hand2", command=self._boost_cpu)
+        self.btn_boost.pack(side="left", padx=4, pady=2, ipadx=8, ipady=4)
+        self.btn_temp = tk.Button(f_btns, text="🌡️ Temp",
+                 bg="#1e293b", fg=TXT, font=("Courier New", 10, "bold"),
+                 relief="flat", cursor="hand2", command=self._check_temp)
+        self.btn_temp.pack(side="left", padx=4, pady=2, ipadx=8, ipady=4)
 
         # CONFIG
         frame_cfg = tk.Frame(self.root, bg=SURF,
@@ -240,6 +261,33 @@ class OptiCPUApp:
             self.btn_ia.config(state="normal", text="Analyse IA")
 
         threading.Thread(target=run, daemon=True).start()
+    def _liberer_ram(self):
+        self.btn_ram.config(state="disabled", text="...")
+        def run():
+            from optimizer_v2 import liberer_ram
+            resultat = liberer_ram()
+            self._log(resultat)
+            self.btn_ram.config(state="normal", text="🧹 RAM")
+        threading.Thread(target=run, daemon=True).start()
+
+    def _boost_cpu(self):
+        self.btn_boost.config(state="disabled", text="...")
+        def run():
+            from optimizer_v2 import boost_cpu, boost_calcul_cpu
+            self._log(boost_cpu())
+            self._log(boost_calcul_cpu())
+            self.btn_boost.config(state="normal", text="⚡ Boost")
+        threading.Thread(target=run, daemon=True).start()
+
+    def _check_temp(self):
+        from optimizer_v2 import anti_surchauffe
+        resultat = anti_surchauffe()
+        self._log(resultat)
+
+    def _arreter(self):
+        self.running = False
+        self._log("Arrêt demandé...")
+        self.btn_stop.config(state="disabled")
 
     def _arreter(self):
         self.running = False
