@@ -1,0 +1,15 @@
+{
+  "proteges": [
+    "claude.exe",
+    "vivaldi.exe",
+    "code.exe",
+    "cursor.exe",
+    "nano.exe",
+    "python.exe",
+    "powershell.exe",
+    "explorer.exe",
+    "svchost.exe",
+    "msys2.exe",
+	"antigravity.exe"
+  ]
+}

@@ -7,18 +7,23 @@ import sys
 # LIBÉRER LA RAM
 # ==============================
 def liberer_ram():
-    """Tue les processus inutiles en arrière-plan"""
-    # Processus à ignorer (système + notre app)
-    protéges = {"system", "svchost.exe", "explorer.exe", 
-                "python.exe", "powershell.exe", "msys2.exe"}
+    """Tue les processus inutiles en respectant la liste blanche"""
+    import json, os
+    # Charge la liste de protection
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config_protection.json')
+    try:
+        with open(config_path) as f:
+            proteges = set(json.load(f)["proteges"])
+    except:
+        proteges = {"python.exe", "powershell.exe", "explorer.exe"}
+
     avant = psutil.virtual_memory().percent
     tues = []
     for proc in psutil.process_iter(['name', 'memory_percent']):
         try:
             nom = proc.info['name'].lower()
             mem = proc.info['memory_percent']
-            # Tue les processus qui consomment >1% RAM et non protégés
-            if mem > 1.0 and nom not in protéges:
+            if mem > 1.0 and nom not in proteges:
                 proc.kill()
                 tues.append(f"{nom} ({mem:.1f}%)")
         except:
